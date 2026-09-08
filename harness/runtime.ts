@@ -1,15 +1,18 @@
 import { StateStore, type WorkflowState } from "./state";
 import { DefaultToolPolicy, type ToolPolicy } from "./policies";
+import { DefaultMemoryHydrator, type ContextHydrator } from "./memory";
 import { safeTools, allTools } from "./tools";
 
 export class AgentRuntime {
   stateStore: StateStore;
   policy: ToolPolicy;
+  hydrator: ContextHydrator;
   private emit: (type: string, data: any) => void;
 
-  constructor(options?: { stateStore?: StateStore; policy?: ToolPolicy; emit?: (type: string, data: any) => void }) {
+  constructor(options?: { stateStore?: StateStore; policy?: ToolPolicy; hydrator?: ContextHydrator; emit?: (type: string, data: any) => void }) {
     this.stateStore = options?.stateStore || new StateStore(":memory:");
     this.policy = options?.policy || new DefaultToolPolicy();
+    this.hydrator = options?.hydrator || new DefaultMemoryHydrator();
     this.emit = options?.emit || (() => {});
   }
 
@@ -28,6 +31,20 @@ export class AgentRuntime {
     this.emit("workflow_start", { workflowId, state });
 
     while (!state.done) {
+      // Memory compaction check (L4)
+      if (this.hydrator instanceof DefaultMemoryHydrator) {
+        const history = state.context.history || [];
+        if (history.length > 5) {
+          const { kept, summary } = this.hydrator.compact(history);
+          state.context.history = kept;
+          state.context.summary = summary;
+          await this.stateStore.checkpoint(workflowId, state);
+        }
+      }
+
+      const contextPrompt = await this.hydrator.hydrate(state);
+      this.emit("workflow_step", { stepIndex: state.stepIndex, contextPrompt });
+
       const queue = state.context.queue || [];
       if (state.stepIndex >= queue.length) {
         state.done = true;
@@ -36,9 +53,7 @@ export class AgentRuntime {
       }
 
       const step = queue[state.stepIndex];
-      this.emit("workflow_step", { stepIndex: state.stepIndex, step });
 
-      // Policy check (L3)
       const check = await this.policy.check(step);
       if (!check.allowed && !check.requiresApproval) {
         this.emit("policy_blocked", { step, reason: check.reason });

@@ -53,3 +53,19 @@ test("Lesson 3: ToolPolicy blocks dangerous injection/commands", async () => {
   });
   expect(safeCheck.allowed).toBe(true);
 });
+
+import { DefaultMemoryHydrator } from "../harness/memory";
+
+test("Lesson 4: Memory Hydrator & Compaction shrinks history window", async () => {
+  const hydrator = new DefaultMemoryHydrator(2);
+  const history = [
+    { tool: "step1" },
+    { tool: "step2" },
+    { tool: "step3" },
+    { tool: "step4" },
+  ];
+
+  const { kept, summary } = hydrator.compact(history);
+  expect(kept.length).toBe(2);
+  expect(summary).toContain("Compacted 2 older steps");
+});
