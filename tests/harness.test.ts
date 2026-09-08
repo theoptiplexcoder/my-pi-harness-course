@@ -33,3 +33,23 @@ test("Lesson 2: Durable StateStore checkpoints and survives interruption", async
   expect(events.length).toBe(1);
   expect(events[0].eventType).toBe("test_event");
 });
+
+import { DefaultToolPolicy } from "../harness/policies";
+
+test("Lesson 3: ToolPolicy blocks dangerous injection/commands", async () => {
+  const policy = new DefaultToolPolicy();
+  const blockedCheck = await policy.check({
+    tool: "runCode",
+    params: { code: "rm -rf /" },
+  });
+
+  expect(blockedCheck.allowed).toBe(false);
+  expect(blockedCheck.requiresApproval).toBe(false);
+  expect(blockedCheck.reason).toContain("blocked by ToolPolicy");
+
+  const safeCheck = await policy.check({
+    tool: "classifyItem",
+    params: { item: "safe task" },
+  });
+  expect(safeCheck.allowed).toBe(true);
+});

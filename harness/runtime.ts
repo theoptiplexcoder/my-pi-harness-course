@@ -1,12 +1,15 @@
 import { StateStore, type WorkflowState } from "./state";
+import { DefaultToolPolicy, type ToolPolicy } from "./policies";
 import { safeTools, allTools } from "./tools";
 
 export class AgentRuntime {
   stateStore: StateStore;
+  policy: ToolPolicy;
   private emit: (type: string, data: any) => void;
 
-  constructor(options?: { stateStore?: StateStore; emit?: (type: string, data: any) => void }) {
+  constructor(options?: { stateStore?: StateStore; policy?: ToolPolicy; emit?: (type: string, data: any) => void }) {
     this.stateStore = options?.stateStore || new StateStore(":memory:");
+    this.policy = options?.policy || new DefaultToolPolicy();
     this.emit = options?.emit || (() => {});
   }
 
@@ -34,6 +37,14 @@ export class AgentRuntime {
 
       const step = queue[state.stepIndex];
       this.emit("workflow_step", { stepIndex: state.stepIndex, step });
+
+      // Policy check (L3)
+      const check = await this.policy.check(step);
+      if (!check.allowed && !check.requiresApproval) {
+        this.emit("policy_blocked", { step, reason: check.reason });
+        await this.stateStore.appendEvent(workflowId, "policy_blocked", { step, reason: check.reason });
+        throw new Error(`Execution policy blocked: ${check.reason}`);
+      }
 
       await this.stateStore.appendEvent(workflowId, "tool_step_decided", step);
 
