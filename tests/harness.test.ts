@@ -86,3 +86,28 @@ test("Lesson 5: Router dispatches intent to specialists", async () => {
   const res = await router.executeHandoff(handoff);
   expect(res.resolvedBy).toBe("support");
 });
+
+import { HierarchicalSupervisor } from "../harness/supervisor";
+
+test("Lesson 6: Hierarchical Supervisor plans, runs in parallel, and synthesizes", async () => {
+  const supervisor = new HierarchicalSupervisor();
+  supervisor.registerWorker("textWorker", async (payload) => `Analyzed text: ${payload.text}`);
+  supervisor.registerWorker("codeWorker", async (payload) => `Executed snippet: ${payload.code}`);
+
+  const packet = {
+    items: [
+      { type: "text", text: "Report A" },
+      { type: "code", code: "console.log('hi')" },
+      { type: "text", text: "Report B" },
+    ],
+  };
+
+  const plan = supervisor.plan(packet);
+  expect(plan.length).toBe(3);
+
+  const results = await supervisor.executeParallel(plan);
+  const synthesis = supervisor.synthesize(results);
+  expect(synthesis.total).toBe(3);
+  expect(synthesis.succeeded).toBe(3);
+  expect(synthesis.failed).toBe(0);
+});

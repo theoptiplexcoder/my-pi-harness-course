@@ -2,6 +2,7 @@ import { StateStore, type WorkflowState } from "./state";
 import { DefaultToolPolicy, type ToolPolicy, type ToolCallStep } from "./policies";
 import { DefaultMemoryHydrator, type ContextHydrator } from "./memory";
 import { AgentRouter } from "./router";
+import { HierarchicalSupervisor } from "./supervisor";
 import { safeTools, allTools } from "./tools";
 
 export class AgentRuntime {
@@ -9,13 +10,15 @@ export class AgentRuntime {
   policy: ToolPolicy;
   hydrator: ContextHydrator;
   router: AgentRouter;
+  supervisor: HierarchicalSupervisor;
   private emit: (type: string, data: any) => void;
 
-  constructor(options?: { stateStore?: StateStore; policy?: ToolPolicy; hydrator?: ContextHydrator; router?: AgentRouter; emit?: (type: string, data: any) => void }) {
+  constructor(options?: { stateStore?: StateStore; policy?: ToolPolicy; hydrator?: ContextHydrator; router?: AgentRouter; supervisor?: HierarchicalSupervisor; emit?: (type: string, data: any) => void }) {
     this.stateStore = options?.stateStore || new StateStore(":memory:");
     this.policy = options?.policy || new DefaultToolPolicy();
     this.hydrator = options?.hydrator || new DefaultMemoryHydrator();
     this.router = options?.router || new AgentRouter();
+    this.supervisor = options?.supervisor || new HierarchicalSupervisor();
     this.emit = options?.emit || (() => {});
   }
 
@@ -23,6 +26,12 @@ export class AgentRuntime {
     if (step.tool === "routeIntent") {
       const handoff = this.router.route(step.params.intent, step.params.payload);
       return await this.router.executeHandoff(handoff);
+    }
+
+    if (step.tool === "superviseParallel") {
+      const plan = this.supervisor.plan({ items: step.params?.items || [] });
+      const results = await this.supervisor.executeParallel(plan);
+      return this.supervisor.synthesize(results);
     }
 
     const toolDef = allTools[step.tool];
