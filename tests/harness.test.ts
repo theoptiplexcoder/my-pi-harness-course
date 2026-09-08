@@ -69,3 +69,20 @@ test("Lesson 4: Memory Hydrator & Compaction shrinks history window", async () =
   expect(kept.length).toBe(2);
   expect(summary).toContain("Compacted 2 older steps");
 });
+
+import { AgentRouter } from "../harness/router";
+
+test("Lesson 5: Router dispatches intent to specialists", async () => {
+  const router = new AgentRouter();
+  router.register({
+    name: "supportSpecialist",
+    description: "Handles customer queries",
+    handle: async (packet) => ({ resolvedBy: "support", query: packet.query }),
+  });
+
+  const handoff = router.route("Need help with customer ticket", { query: "Can I get a refund?" });
+  expect(handoff.targetAgent).toBe("supportSpecialist");
+
+  const res = await router.executeHandoff(handoff);
+  expect(res.resolvedBy).toBe("support");
+});
