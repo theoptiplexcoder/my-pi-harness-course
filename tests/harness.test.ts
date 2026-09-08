@@ -1,5 +1,11 @@
 import { test, expect } from "bun:test";
 import { AgentRuntime } from "../harness/runtime";
+import { StateStore } from "../harness/state";
+import { DefaultToolPolicy } from "../harness/policies";
+import { DefaultMemoryHydrator } from "../harness/memory";
+import { AgentRouter } from "../harness/router";
+import { HierarchicalSupervisor } from "../harness/supervisor";
+import { ApprovalStore } from "../harness/approvals";
 
 test("Lesson 1: Agent Runtime and Safe Tools execute cleanly", async () => {
   const runtime = new AgentRuntime();
@@ -18,8 +24,6 @@ test("Lesson 1: Agent Runtime and Safe Tools execute cleanly", async () => {
   expect(finalState.context.history[0].result.priority).toBe("high");
 });
 
-import { StateStore } from "../harness/state";
-
 test("Lesson 2: Durable StateStore checkpoints and survives interruption", async () => {
   const store = new StateStore(":memory:");
   await store.checkpoint("wf-durable", { stepIndex: 1, done: false, context: { counter: 42 } });
@@ -33,8 +37,6 @@ test("Lesson 2: Durable StateStore checkpoints and survives interruption", async
   expect(events.length).toBe(1);
   expect(events[0].eventType).toBe("test_event");
 });
-
-import { DefaultToolPolicy } from "../harness/policies";
 
 test("Lesson 3: ToolPolicy blocks dangerous injection/commands", async () => {
   const policy = new DefaultToolPolicy();
@@ -54,8 +56,6 @@ test("Lesson 3: ToolPolicy blocks dangerous injection/commands", async () => {
   expect(safeCheck.allowed).toBe(true);
 });
 
-import { DefaultMemoryHydrator } from "../harness/memory";
-
 test("Lesson 4: Memory Hydrator & Compaction shrinks history window", async () => {
   const hydrator = new DefaultMemoryHydrator(2);
   const history = [
@@ -69,8 +69,6 @@ test("Lesson 4: Memory Hydrator & Compaction shrinks history window", async () =
   expect(kept.length).toBe(2);
   expect(summary).toContain("Compacted 2 older steps");
 });
-
-import { AgentRouter } from "../harness/router";
 
 test("Lesson 5: Router dispatches intent to specialists", async () => {
   const router = new AgentRouter();
@@ -86,8 +84,6 @@ test("Lesson 5: Router dispatches intent to specialists", async () => {
   const res = await router.executeHandoff(handoff);
   expect(res.resolvedBy).toBe("support");
 });
-
-import { HierarchicalSupervisor } from "../harness/supervisor";
 
 test("Lesson 6: Hierarchical Supervisor plans, runs in parallel, and synthesizes", async () => {
   const supervisor = new HierarchicalSupervisor();
@@ -112,8 +108,6 @@ test("Lesson 6: Hierarchical Supervisor plans, runs in parallel, and synthesizes
   expect(synthesis.failed).toBe(0);
 });
 
-import { ApprovalStore } from "../harness/approvals";
-
 test("Lesson 7: Human-in-the-Loop suspends and resumes upon approval", async () => {
   const approvalStore = new ApprovalStore(":memory:");
   const runtime = new AgentRuntime({ approvalStore });
@@ -125,6 +119,7 @@ test("Lesson 7: Human-in-the-Loop suspends and resumes upon approval", async () 
     ],
   };
 
+  // Step 1 executes safe tool, step 2 requires approval and suspends
   const stateSuspended = await runtime.runWorkflow("wf-approval-test", input);
   expect(stateSuspended.done).toBe(false);
   expect(stateSuspended.stepIndex).toBe(1);
@@ -133,8 +128,48 @@ test("Lesson 7: Human-in-the-Loop suspends and resumes upon approval", async () 
   expect(pending.length).toBe(1);
   expect(pending[0]!.tool).toBe("sendMessage");
 
+  // Resume workflow with human approval
   const finalState = await runtime.resumeWorkflow("wf-approval-test", pending[0]!.id, true);
   expect(finalState.done).toBe(true);
   expect(finalState.stepIndex).toBe(2);
   expect(finalState.context.history[1]!.approved).toBe(true);
+});
+
+test("Lesson 5 & 6 Integration: Runtime executes router and supervisor steps directly", async () => {
+  const router = new AgentRouter();
+  router.register({
+    name: "securitySpecialist",
+    description: "Security analysis",
+    handle: async (packet) => ({ status: "scanned", issues: 0 }),
+  });
+
+  const supervisor = new HierarchicalSupervisor();
+  supervisor.registerWorker("textWorker", async (item) => `Processed: ${item.text}`);
+
+  const runtime = new AgentRuntime({ router, supervisor });
+
+  const input = {
+    steps: [
+      {
+        tool: "routeIntent",
+        params: { intent: "Check code security and vulnerabilities", payload: { target: "auth.ts" } },
+      },
+      {
+        tool: "superviseParallel",
+        params: {
+          items: [
+            { type: "text", text: "Part 1" },
+            { type: "text", text: "Part 2" },
+          ],
+        },
+      },
+    ],
+  };
+
+  const state = await runtime.runWorkflow("wf-router-super-test", input);
+  expect(state.done).toBe(true);
+  expect(state.stepIndex).toBe(2);
+  expect(state.context.history[0]!.result.status).toBe("scanned");
+  expect(state.context.history[1]!.result.total).toBe(2);
+  expect(state.context.history[1]!.result.succeeded).toBe(2);
 });
