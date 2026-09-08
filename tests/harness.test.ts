@@ -111,3 +111,30 @@ test("Lesson 6: Hierarchical Supervisor plans, runs in parallel, and synthesizes
   expect(synthesis.succeeded).toBe(3);
   expect(synthesis.failed).toBe(0);
 });
+
+import { ApprovalStore } from "../harness/approvals";
+
+test("Lesson 7: Human-in-the-Loop suspends and resumes upon approval", async () => {
+  const approvalStore = new ApprovalStore(":memory:");
+  const runtime = new AgentRuntime({ approvalStore });
+
+  const input = {
+    steps: [
+      { tool: "classifyItem", params: { item: "Billing dispute" } },
+      { tool: "sendMessage", params: { recipient: "client@example.com", message: "Refund issued" } },
+    ],
+  };
+
+  const stateSuspended = await runtime.runWorkflow("wf-approval-test", input);
+  expect(stateSuspended.done).toBe(false);
+  expect(stateSuspended.stepIndex).toBe(1);
+
+  const pending = await approvalStore.getPending("wf-approval-test");
+  expect(pending.length).toBe(1);
+  expect(pending[0]!.tool).toBe("sendMessage");
+
+  const finalState = await runtime.resumeWorkflow("wf-approval-test", pending[0]!.id, true);
+  expect(finalState.done).toBe(true);
+  expect(finalState.stepIndex).toBe(2);
+  expect(finalState.context.history[1]!.approved).toBe(true);
+});
