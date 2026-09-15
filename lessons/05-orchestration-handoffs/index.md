@@ -62,3 +62,13 @@ export class AgentRouter {
 ## In Production
 
 Corresponds to **OpenAI Swarm**, **Mastra Agents**, or **LangGraph Multi-Agent Routers**.
+
+---
+
+## Reference & Documentation
+
+To see how delegation, specialized prompts, and context handoffs work in Pi:
+- **Prompt Templates & Specialization**: [`docs/prompt-templates.md`](../../node_modules/@earendil-works/pi-coding-agent/docs/prompt-templates.md)
+- **Subagent Delegation Architecture**: [`examples/extensions/subagent/README.md`](../../node_modules/@earendil-works/pi-coding-agent/examples/extensions/subagent/README.md)
+- **Specialist Prompts & Personas**: [`examples/extensions/subagent/agents/scout.md`](../../node_modules/@earendil-works/pi-coding-agent/examples/extensions/subagent/agents/scout.md)
+

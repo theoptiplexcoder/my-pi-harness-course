@@ -69,3 +69,13 @@ export class DefaultToolPolicy implements ToolPolicy {
 ## In Production
 
 Production harnesses enforce isolation via **e2b micro-sandboxes**, **Firecracker microVMs**, or **Docker containers** with read-only filesystems and blocked egress networking.
+
+---
+
+## Reference & Documentation
+
+To learn how security, sandboxing, and execution guardrails are implemented in the Pi SDK:
+- **Security Guide**: [`docs/security.md`](../../node_modules/@earendil-works/pi-coding-agent/docs/security.md)
+- **Containerization & Sandboxing Guide**: [`docs/containerization.md`](../../node_modules/@earendil-works/pi-coding-agent/docs/containerization.md)
+- **Output Guard & Safety Types**: [`dist/core/output-guard.d.ts`](../../node_modules/@earendil-works/pi-coding-agent/dist/core/output-guard.d.ts)
+

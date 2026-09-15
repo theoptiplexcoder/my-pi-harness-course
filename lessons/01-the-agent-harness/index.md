@@ -74,3 +74,13 @@ export class AgentRuntime {
 ## In Production
 
 In production systems, tools like **Temporal Activities** or **Inngest Steps** wrap each step so that events stream over WebSockets/SSE to your dashboard, giving full visibility into LLM thought-action cycles.
+
+---
+
+## Reference & Documentation
+
+To see how the production Pi SDK implements this minimal agent session, event subscription, and tool execution lifecycle, refer to:
+- **SDK Reference**: [`docs/sdk.md`](../../node_modules/@earendil-works/pi-coding-agent/docs/sdk.md)
+- **Minimal Agent Session Example**: [`examples/sdk/01-minimal.ts`](../../node_modules/@earendil-works/pi-coding-agent/examples/sdk/01-minimal.ts)
+- **Core Event Bus Source**: [`dist/core/event-bus.d.ts`](../../node_modules/@earendil-works/pi-coding-agent/dist/core/event-bus.d.ts)
+

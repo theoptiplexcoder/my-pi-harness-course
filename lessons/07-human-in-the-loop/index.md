@@ -56,3 +56,13 @@ async resumeWorkflow(workflowId: string, approvalId: string, approved: boolean):
 ## In Production
 
 Corresponds to **Temporal Signals & Queries**, **Inngest `waitForEvent`**, or human approval webhooks.
+
+---
+
+## Reference & Documentation
+
+To learn how human approvals, event hooks, and tool interception are implemented:
+- **Tool Interception & Event Hooks**: [`docs/extensions.md`](../../node_modules/@earendil-works/pi-coding-agent/docs/extensions.md)
+- **TUI & User Approval Notifications**: [`docs/tui.md`](../../node_modules/@earendil-works/pi-coding-agent/docs/tui.md)
+- **Settings & Permission Modes**: [`docs/settings.md`](../../node_modules/@earendil-works/pi-coding-agent/docs/settings.md)
+

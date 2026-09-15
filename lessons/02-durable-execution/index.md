@@ -72,3 +72,13 @@ export class StateStore {
 ## In Production
 
 In enterprise architectures, this matches **Temporal Workflows**, **DBOS**, or **AWS Step Functions**, where execution progress is checkpointed before external interactions take place.
+
+---
+
+## Reference & Documentation
+
+To see how session state persistence and replay are handled in the Pi SDK:
+- **Session Management Reference**: [`docs/sessions.md`](../../node_modules/@earendil-works/pi-coding-agent/docs/sessions.md)
+- **Session Persistence Example**: [`examples/sdk/11-sessions.ts`](../../node_modules/@earendil-works/pi-coding-agent/examples/sdk/11-sessions.ts)
+- **Session Manager Source**: [`dist/core/session-manager.d.ts`](../../node_modules/@earendil-works/pi-coding-agent/dist/core/session-manager.d.ts)
+

@@ -52,3 +52,13 @@ export class DefaultMemoryHydrator implements ContextHydrator {
 ## In Production
 
 Matches **LangGraph Checkpoint Memory**, **MemGPT**, or the native **Pi compaction engine** (`CompactionEntry` in `.jsonl` session trees).
+
+---
+
+## Reference & Documentation
+
+To see how history summarization, token window management, and compaction work in Pi:
+- **Compaction Guide**: [`docs/compaction.md`](../../node_modules/@earendil-works/pi-coding-agent/docs/compaction.md)
+- **Session Format Specification**: [`docs/session-format.md`](../../node_modules/@earendil-works/pi-coding-agent/docs/session-format.md)
+- **Compaction Engine Types**: [`dist/core/compaction/index.d.ts`](../../node_modules/@earendil-works/pi-coding-agent/dist/core/compaction/index.d.ts)
+

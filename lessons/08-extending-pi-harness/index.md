@@ -208,3 +208,14 @@ const { session } = await createAgentSession({
   sessionManager: SessionManager.inMemory(),
 });
 ```
+
+---
+
+## Reference & Documentation
+
+To dive deeper into extending Pi with tools, skills, extensions, and subagents:
+- **Extensions Guide**: [`docs/extensions.md`](../../node_modules/@earendil-works/pi-coding-agent/docs/extensions.md)
+- **Skills Specification & Loading**: [`docs/skills.md`](../../node_modules/@earendil-works/pi-coding-agent/docs/skills.md)
+- **Full SDK Control Example**: [`examples/sdk/12-full-control.ts`](../../node_modules/@earendil-works/pi-coding-agent/examples/sdk/12-full-control.ts)
+- **Subagent Extension Examples**: [`examples/extensions/subagent/`](../../node_modules/@earendil-works/pi-coding-agent/examples/extensions/subagent/)
+

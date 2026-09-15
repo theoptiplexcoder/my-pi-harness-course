@@ -63,3 +63,13 @@ export class HierarchicalSupervisor {
 ## In Production
 
 Corresponds to **Supervisor / Worker Trees** in LangGraph or hierarchical orchestrations in Temporal.
+
+---
+
+## Reference & Documentation
+
+To study multi-agent coordination, subagent trees, and concurrent execution in Pi:
+- **Subagent Extension & Coordination**: [`examples/extensions/subagent/README.md`](../../node_modules/@earendil-works/pi-coding-agent/examples/extensions/subagent/README.md)
+- **Subagent Workflows (Implement & Review)**: [`examples/extensions/subagent/prompts/implement-and-review.md`](../../node_modules/@earendil-works/pi-coding-agent/examples/extensions/subagent/prompts/implement-and-review.md)
+- **Remote Process Control & RPC**: [`docs/rpc.md`](../../node_modules/@earendil-works/pi-coding-agent/docs/rpc.md)
+
